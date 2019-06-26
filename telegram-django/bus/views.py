@@ -6,7 +6,6 @@ import time
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
 # from django.shortcuts import render
 
 import requests
@@ -17,6 +16,7 @@ from .send_message import send_msg
 from .models import BusGo, BusOut
 
 token = config('TOKEN')
+bus_key = config('BUS_KEY')
 api_url = f'https://api.telegram.org/bot{token}'
 
 reg_order = {}
@@ -110,7 +110,7 @@ def tel(request):
             else:
                 bus_number[chat_id] = bus_number[chat_id][0]
                 print('입력받은 버스넘버:', bus_number)
-                url = f'http://openapi.gbis.go.kr/ws/rest/busrouteservice?serviceKey=p7RiOnONfT8hc4MMVfKU8%2BSr2pQ8vwgM3JQA0sap60em7nJZW5QpGUrGcDmQy4nqe%2B1YxAOAwL7F1uRrlk8PkQ%3D%3D&keyword={bus_number.get(chat_id)}'
+                url = f'http://openapi.gbis.go.kr/ws/rest/busrouteservice?serviceKey={bus_key}&keyword={bus_number.get(chat_id)}'
                 url_result = requests.get(url).text
                 soup = BS(url_result, 'html.parser')
                 bus_list[chat_id] = soup.find('msgbody')
@@ -161,7 +161,7 @@ def tel(request):
                 send_msg(chat_id, msg)
 
         elif reg_order.get(chat_id) == 3 and save_input.get(chat_id) != user_msg.get(chat_id):  # 입력받은 탑승지로 정류장 검색
-            url = f'http://openapi.gbis.go.kr/ws/rest/busrouteservice/station?serviceKey=p7RiOnONfT8hc4MMVfKU8%2BSr2pQ8vwgM3JQA0sap60em7nJZW5QpGUrGcDmQy4nqe%2B1YxAOAwL7F1uRrlk8PkQ%3D%3D&routeId={routeid.get(chat_id)}'
+            url = f'http://openapi.gbis.go.kr/ws/rest/busrouteservice/station?serviceKey={bus_key}&routeId={routeid.get(chat_id)}'
             url_result = requests.get(url).text
             soup = BS(url_result, 'html.parser')
 
@@ -228,10 +228,11 @@ def tel(request):
                     busout.out_route_id = routeid.get(chat_id)
                     busout.out_station_order = station_include.get(chat_id)[bus_stop][3]
                     busout.save()
-                msg = '등록이 완료 되었습니다.\n'\
+                msg = '등록이 완료 되었습니다.\n' \
+                      '--------------------------'\
                         '알림 예시 : 출근 버스 10분전 알림\n' \
                 '               퇴근버스 10분전에 알려줘\n' \
-                '위의 예시와 유사하게 입력하세요'
+                '  위의 예시와 유사하게 입력하세요  '
                 send_msg(chat_id, msg)
 
                 if reg_order.get(chat_id):

@@ -12,6 +12,7 @@ if __name__ == '__main__':
     from bus.models import BusGo, BusOut
 
 token = config('TOKEN')
+bus_key = config('BUS_KEY')
 api_url = f'https://api.telegram.org/bot{token}'
 
 chat_id = sys.argv[1]
@@ -49,7 +50,7 @@ else:  # direction == 'out'
 
 if station_id is not None:
     # url = 'http://openapi.gbis.go.kr/ws/rest/busarrivalservice?serviceKey=p7RiOnONfT8hc4MMVfKU8%2BSr2pQ8vwgM3JQA0sap60em7nJZW5QpGUrGcDmQy4nqe%2B1YxAOAwL7F1uRrlk8PkQ%3D%3D&stationId=121000921&routeId=200000110&staOrder=39'
-    url = f'http://openapi.gbis.go.kr/ws/rest/busarrivalservice?serviceKey=p7RiOnONfT8hc4MMVfKU8%2BSr2pQ8vwgM3JQA0sap60em7nJZW5QpGUrGcDmQy4nqe%2B1YxAOAwL7F1uRrlk8PkQ%3D%3D&stationId={station_id}&routeId={route_id}&staOrder={station_order}'
+    url = f'http://openapi.gbis.go.kr/ws/rest/busarrivalservice?serviceKey={bus_key}&stationId={station_id}&routeId={route_id}&staOrder={station_order}'
     request = requests.get(url).text
     soup = BS(request, 'html.parser')
     # 되기는 하지만 너무 길다..
