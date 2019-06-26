@@ -229,7 +229,7 @@ def tel(request):
                     busout.out_station_order = station_include.get(chat_id)[bus_stop][3]
                     busout.save()
                 msg = '등록이 완료 되었습니다.\n' \
-                      '--------------------------'\
+                      '--------------------------------\n'\
                         '알림 예시 : 출근 버스 10분전 알림\n' \
                 '               퇴근버스 10분전에 알려줘\n' \
                 '  위의 예시와 유사하게 입력하세요  '

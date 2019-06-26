@@ -69,9 +69,9 @@ if station_id is not None:
             f'(알림 정지방법) "정지" "종료" 등을 입력'
         requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
 
-    else:
-        msg = f'test predict={predict1}, minute={minute}'
-        requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
+    # else:
+    #     msg = f'test predict={predict1}, minute={minute}'
+    #     requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
 
 # if __name__ == '__main__':
 #     path = os.path.dirname(__file__)
