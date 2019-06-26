@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import time
 
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
@@ -55,9 +56,17 @@ def tel(request):
     if message is not None:
         chat_id = message.get('from').get('id')
         user_msg[chat_id] = message.get('text')
+        p = re.compile('[종료|정지|중지|그만|멈춰].+')  # 종료, 정지 등의 단어가 포함되는지 확인
         print('0 order=', reg_order.get(chat_id), 'save=', save_input.get(chat_id))
 
-        if user_msg.get(chat_id)[-2:] in ['종료', '중지', '정지', '그만', '멈춰', ]:
+        if (round(time.time())-message.get('date')) > 10:
+            print('time=', (round(time.time())-message.get('date')))
+            return JsonResponse({})
+
+        elif not user_msg.get(chat_id):
+            return JsonResponse({})
+
+        elif p.match(user_msg.get(chat_id)):
             cron = f'sudo crontab -u {chat_id} -r'  # 해당 계정의 크론탭을 삭제 후
             user = f'sudo userdel -f {chat_id}'  # 계정을 삭제, 계정 먼저 삭제 시 크론탭 삭제 불가능
             os.system(cron)
@@ -116,12 +125,20 @@ def tel(request):
                     msg = '버스를 선택하세요. ex) 1, 1번'
                     # requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
                     routeid_list[chat_id] = []
-                    for idx, bus in enumerate(bus_list.get(chat_id)):
-                        msg += f'\n{idx + 1}. 지역: {bus.find("regionname").contents[0]} / 번호: {bus.find("routename").contents[0]}'
-                        routeid_list[chat_id].append(bus.find('routeid').contents[0])
+                    if len(bus_number.get(chat_id)) < 2:
+                        idx = 0
+                        for bus in bus_list.get(chat_id):
+                            if bus.find("routename").contents[0] == bus_number.get(chat_id):
+                                msg += f'\n{idx + 1}. 지역: {bus.find("regionname").contents[0]} / 번호: {bus.find("routename").contents[0]}'
+                                routeid_list[chat_id].append(bus.find('routeid').contents[0])
+                                idx += 1
+
+                    else:
+                        for idx, bus in enumerate(bus_list.get(chat_id)):
+                            msg += f'\n{idx + 1}. 지역: {bus.find("regionname").contents[0]} / 번호: {bus.find("routename").contents[0]}'
+                            routeid_list[chat_id].append(bus.find('routeid').contents[0])
                     send_msg(chat_id, msg)
-                    bus_len[chat_id] = len(bus_list.get(chat_id))
-                    print('route_list=', routeid_list)
+                    bus_len[chat_id] = len(bus_list.get(chat_id))  # 불필요한듯..
                     reg_order[chat_id] = 2
                     save_input[chat_id] = user_msg.get(chat_id)
                     print('2 order=', reg_order.get(chat_id), 'save=', save_input.get(chat_id), 'user_msg=',
@@ -130,7 +147,7 @@ def tel(request):
         elif reg_order.get(chat_id) == 2 and save_input.get(chat_id) != user_msg.get(chat_id):  # 버스 선택 후 탑승지 입력 받기
             # idx = int(re.findall('\d+', input_text)[0])
             idx = int(re.findall('\d+', user_msg.get(chat_id))[0])-1
-            if idx < bus_len.get(chat_id):
+            if idx < len(routeid_list.get(chat_id)):
                 routeid[chat_id] = routeid_list.get(chat_id)[idx]
                 msg = '탑승 정류장이 포함된 단어를 입력하세요. \n ' \
                       'ex)시민의숲.양재꽃시장 -> 시민의숲, 양재, 꽃시장'
@@ -211,7 +228,11 @@ def tel(request):
                     busout.out_route_id = routeid.get(chat_id)
                     busout.out_station_order = station_include.get(chat_id)[bus_stop][3]
                     busout.save()
-                send_msg(chat_id, '등록이 완료 되었습니다.')
+                msg = '등록이 완료 되었습니다.\n'\
+                        '알림 예시 : 출근 버스 10분전 알림\n' \
+                '               퇴근버스 10분전에 알려줘\n' \
+                '위의 예시와 유사하게 입력하세요'
+                send_msg(chat_id, msg)
 
                 if reg_order.get(chat_id):
                     del reg_order[chat_id]
@@ -245,9 +266,9 @@ def tel(request):
                     print('del 10')
 
             else:
-                msg = f'1~{len(station_include)}의 번호를 입력하세요'
+                msg = f'1~{len(station_include.get(chat_id))}의 번호를 입력하세요'
                 send_msg(chat_id, msg)
-                save_input[chat_id] = None
+                # save_input[chat_id] = None
 
         elif user_msg.get(chat_id)[:2] == '출근':
             if user_msg.get(chat_id)[-2:] != '등록':
@@ -289,8 +310,23 @@ def tel(request):
                         print(cron)
                         os.system(user)
                         os.system(cron)
-                        msg = f'퇴근버스 ({busout.out_bus_number}) 도착 {minute[0]}분 전 알림\n'\
+                        msg = f'{busout.out_bus_number}번 버스 도착 {minute[0]}분 전 알림\n'\
                             f'종료, 정지 등을 입력하면 종료합니다.'
                         send_msg(chat_id, msg)
                         print('end')
+        elif user_msg.get(chat_id) in ['/start', '안녕', '메뉴', '김비서', '하이']:
+            msg = '''안녕하세요. 김비서입니다 :D
+원하는 알림을 아래와 같이 설정해보세요.
+예) 교통정보알림 설정 방법
+- (등록 방법) “출근/퇴근 버스 등록” 입력 
+- (등록 후) “출근/퇴근 xx분 전 알림” 입력
+- (알림정지방법) "정지" 또는 "종료" 입력'''
+            send_msg(chat_id, msg)
+        else:
+            msg = '등록 예시 : 출근 버스 등록\n' \
+                '               퇴근 버스 등록\n' \
+                '알림 예시 : 출근 버스 10분전 알림\n' \
+                '               퇴근버스 10분전에 알려줘\n' \
+                '위의 예시와 유사하게 입력하세요'
+            send_msg(chat_id, msg)
     return JsonResponse({})
