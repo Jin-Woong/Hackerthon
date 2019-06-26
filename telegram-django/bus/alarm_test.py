@@ -98,3 +98,14 @@ if bus1.find('분') != -1:
 print(bus1)
 print(type(bus1_minute))
 print(bus1_location)
+
+
+
+test1 = '출근 버스 10분전에 알려줘'
+test2 = '출근 버스 3분마다 알려줘'
+print(('전' in test1))
+print(('마다' in test2))
+if '전' in test1:
+    print('전')
+if '마다' in test2:
+    print('마다')

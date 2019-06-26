@@ -264,7 +264,7 @@ def tel(request):
 
             else:
                 msg = '탑승 정류장을 선택하세요. ex) 2, 2번\n' \
-                      '     탑승 정류장  ->  다음 정류장 (운행방향)'
+                      '**탑승 정류장 -> 다음 정류장 (운행방향)**'
                 for idx, station in enumerate(station_include.get(chat_id)):
                     # if idx < len(station_include.get(chat_id)):
                     msg += f'\n{idx + 1}. {station[1]}  ->  {station[2]}'
@@ -313,6 +313,7 @@ def tel(request):
                             '-----------------------------------------------\n'\
                             '알림 예시 : 출근 버스 10분전 알림\n' \
                             '                 퇴근버스 10분전에 알려줘\n' \
+                            '                 퇴근버스 3분마다 알려줘\n' \
                             '  **위의 예시와 유사하게 입력하세요**  '
                     send_msg(chat_id, msg)
 
@@ -356,13 +357,9 @@ def tel(request):
                         del go_or_out[chat_id]
                         print('del 13')
 
-
-        elif user_msg.get(chat_id)[:2] == '출근':
-            if user_msg.get(chat_id)[-2:] != '등록':
+        elif user_msg.get(chat_id)[:2] == '출근' and user_msg.get(chat_id)[-2:] != '등록' and re.findall('\d+', user_msg.get(chat_id)):
                 minute = re.findall('\d+', user_msg.get(chat_id))
-                if not minute:
-                    pass
-                else:
+                if '전' in user_msg.get(chat_id):
                     busgo = BusGo.objects.filter(chat_id=chat_id).last()
                     if not busgo:
                         msg = '출근 버스를 등록하세요.\n' \
@@ -378,42 +375,73 @@ def tel(request):
                             f'종료, 정지 등을 입력하면 종료합니다.'
                         send_msg(chat_id,msg)
                     print('end')
-                    
-        elif user_msg.get(chat_id)[:2] == '퇴근':
-            if user_msg.get(chat_id)[-2:] != '등록':
-                minute = re.findall('\d+', user_msg.get(chat_id))
-                if not minute:
-                    pass
-                else:
-                    busout = BusOut.objects.filter(chat_id=chat_id).last()
-                    if not busout:
-                        msg = '퇴근 버스를 등록하세요.\n' \
-                            'ex) 퇴근 버스 등록'
+                elif '마다' in user_msg.get(chat_id):
+                    busgo = BusGo.objects.filter(chat_id=chat_id).last()
+                    if not busgo:
+                        msg = '출근 버스를 등록하세요.\n' \
+                              'ex) 출근 버스 등록'
                         send_msg(chat_id, msg)
                     else:
                         user = f'sudo useradd -d /home/ec2-user -u 500 -o {chat_id}'  # ec2-user 와 같은 uid 를 갖도록 계정 생성
                         # 크론탭 시간 1분은 좀 긴거 같고 30초 간격으로 수정해야할듯..
-                        cron = f'(crontab -l 2>/dev/null; echo "*/1 * * * * python3 /home/ec2-user/telegram-django/bus_alarm.py {chat_id} {minute[0]} out") | sudo crontab -u {chat_id} -'
-                        print(cron)
+                        cron = f'(crontab -l 2>/dev/null; echo "*/{minute[0]} * * * * python3 /home/ec2-user/telegram-django/bus_alarm.py {chat_id} 100 go") | sudo crontab -u {chat_id} -'
                         os.system(user)
                         os.system(cron)
-                        msg = f'{busout.out_bus_number}번 버스 도착 {minute[0]}분 전 알림\n'\
+                        msg = f'{busgo.go_bus_number}번 버스 도착 {minute[0]}분 마다 알림\n' \
                             f'종료, 정지 등을 입력하면 종료합니다.'
                         send_msg(chat_id, msg)
-                        print('end')
+                    print('end')
+                    
+        elif user_msg.get(chat_id)[:2] == '퇴근' and user_msg.get(chat_id)[-2:] != '등록' and re.findall('\d+', user_msg.get(chat_id)):
+            minute = re.findall('\d+', user_msg.get(chat_id))
+            if '전' in user_msg.get(chat_id):
+                busout = BusOut.objects.filter(chat_id=chat_id).last()
+                if not busout:
+                    msg = '퇴근 버스를 등록하세요.\n' \
+                        'ex) 퇴근 버스 등록'
+                    send_msg(chat_id, msg)
+                else:
+                    user = f'sudo useradd -d /home/ec2-user -u 500 -o {chat_id}'  # ec2-user 와 같은 uid 를 갖도록 계정 생성
+                    # 크론탭 시간 1분은 좀 긴거 같고 30초 간격으로 수정해야할듯..
+                    cron = f'(crontab -l 2>/dev/null; echo "*/1 * * * * python3 /home/ec2-user/telegram-django/bus_alarm.py {chat_id} {minute[0]} out") | sudo crontab -u {chat_id} -'
+                    print(cron)
+                    os.system(user)
+                    os.system(cron)
+                    msg = f'{busout.out_bus_number}번 버스 도착 {minute[0]}분 전 알림\n'\
+                        f'종료, 정지 등을 입력하면 종료합니다.'
+                    send_msg(chat_id, msg)
+                    print('end')
+            elif '마다' in user_msg.get(chat_id):
+                busout = BusOut.objects.filter(chat_id=chat_id).last()
+                if not busout:
+                    msg = '퇴근 버스를 등록하세요.\n' \
+                          'ex) 퇴근 버스 등록'
+                    send_msg(chat_id, msg)
+                else:
+                    user = f'sudo useradd -d /home/ec2-user -u 500 -o {chat_id}'  # ec2-user 와 같은 uid 를 갖도록 계정 생성
+                    cron = f'(crontab -l 2>/dev/null; echo "*/{minute[0]} * * * * python3 /home/ec2-user/telegram-django/bus_alarm.py {chat_id} 100 out") | sudo crontab -u {chat_id} -'
+                    os.system(user)
+                    os.system(cron)
+                    msg = f'{busout.out_bus_number}번 버스 도착 {minute[0]}분 마다 알림\n' \
+                        f'종료, 정지 등을 입력하면 종료합니다.'
+                    send_msg(chat_id, msg)
+                print('end')
+
         elif user_msg.get(chat_id) in ['/start', '안녕', '메뉴', '김비서', '하이']:
             msg = '''안녕하세요. 김비서입니다 :D
 원하는 알림을 아래와 같이 설정해보세요.
 예) 교통정보알림 설정 방법
 - (등록 방법) “출근/퇴근 버스 등록” 입력 
-- (등록 후) “출근/퇴근 xx분 전 알림” 입력
+- (등록 후) “출근/퇴근 xx분 전/마다 알림” 입력
 - (알림정지방법) "정지" 또는 "종료" 입력'''
             send_msg(chat_id, msg)
         else:
-            msg = '등록 예시 : 출근 버스 등록\n' \
-                '               퇴근 버스 등록\n' \
-                '알림 예시 : 출근 버스 10분전 알림\n' \
-                '               퇴근버스 10분전에 알려줘\n' \
-                '위의 예시와 유사하게 입력하세요'
+            msg = '등록 예시 : "출근 버스 등록"\n' \
+                '                "퇴근 버스 등록"\n' \
+                '알림 예시 : "출근 버스 10분전 알림"\n' \
+                '                "출근버스 3분마다 알려줘"\n' \
+                '                "퇴근버스 10분전에 알려줘"\n' \
+                '정지 예시 : "정지" "종료" 등 입력\n' \
+                '   **위의 예시와 유사하게 입력하세요** '
             send_msg(chat_id, msg)
     return JsonResponse({})

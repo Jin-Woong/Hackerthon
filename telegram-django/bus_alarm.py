@@ -74,7 +74,7 @@ if station_id is not None:
             if int(predict1) <= int(minute):
                 msg = f'직전 버스: {predict1}분 ({location1}정류장) [{seat1}좌석]\n' \
                     f'다음 버스: {predict2}분 ({location2}정류장) [{seat2}좌석]\n' \
-                    f'(알림 정지방법) "정지" "종료" 등을 입력'
+                    f'알림 정지: "정지", "종료" 입력'
                 requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
 
     else:  # region == 'seoul'
@@ -116,3 +116,4 @@ else:
 # if __name__ == '__main__':
 #     path = os.path.dirname(__file__)
 #     from .models import BusGo, BusOut
+
