@@ -1,80 +1,100 @@
 import re
 import requests
 from bs4 import BeautifulSoup as BS
-import time
+from decouple import config
 
-bus_number = re.findall('\d+-?\d+', '1')
-print(bus_number)
-print(not bus_number)
+bus_key = config('BUS_KEY')
 
-# test = {}
-# chat_id = 1234
-# st_list = ['1','2','3']
-#
-# test[chat_id] = []
-# test[chat_id].append([])
-# test[chat_id][0].append('1')
-# test[chat_id][0].append('2')
-#
-# test[chat_id].append([])
-# test[chat_id][1].append('ㅁ')
-# test[chat_id][1].append('ㄴ')
-
-chat_id = 123
+chat_id = '1234'
+bus_list = {}
+bus_number = {}
+routeid_list = {}
 routeid = {}
-station_list = {}
-user_msg = {}
 station_include = {}
-routeid[chat_id] = '232000029'
-user_msg[chat_id] = '강화'
+user_msg = {}
+station_list = {}
 
-url = f'http://openapi.gbis.go.kr/ws/rest/busrouteservice/station?serviceKey=p7RiOnONfT8hc4MMVfKU8%2BSr2pQ8vwgM3JQA0sap60em7nJZW5QpGUrGcDmQy4nqe%2B1YxAOAwL7F1uRrlk8PkQ%3D%3D&routeId={routeid.get(chat_id)}'
+# 버스 번호입력 하세요
+bus_number[chat_id] = '5100'
+
+url = f'http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList?serviceKey={bus_key}&strSrch={bus_number.get(chat_id)}'
+url_result = requests.get(url).text
+soup = BS(url_result, 'html.parser')
+bus_list[chat_id] = soup.find('msgbody')
+
+# 버스 리스트 출력
+msg = '버스를 선택하세요'
+routeid_list[chat_id] = []
+if len(bus_number.get(chat_id)) < 2:
+    idx = 0
+    for bus in bus_list.get(chat_id):
+        if bus.find("busroutenm").contents[0] == bus_number.get(chat_id) or bus.find("busroutenm").contents[0] == '0'+bus_number.get(chat_id):
+            msg += f'\n{idx + 1}. 버스 : {bus.find("busroutenm").contents[0]} / {bus.find("ststationnm").contents[0]}<->{bus.find("edstationnm").contents[0]}'
+            routeid_list[chat_id].append(bus.find('busrouteid').contents[0])
+            idx += 1
+
+else:
+    for idx, bus in enumerate(bus_list.get(chat_id)):
+        msg += f'\n{idx + 1}. 버스 : {bus.find("busroutenm").contents[0]} / {bus.find("ststationnm").contents[0]}<->{bus.find("edstationnm").contents[0]}'
+        routeid_list[chat_id].append(bus.find('busrouteid').contents[0])
+print(msg)
+print(routeid_list)
+
+# 버스 선택
+idx = 2-1
+routeid[chat_id] = routeid_list[chat_id][idx]
+
+# 탑승 정류장 입력
+user_msg[chat_id] = '사'
+station_include[chat_id] = []
+
+url = f'http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute?serviceKey={bus_key}&busRouteId={routeid.get(chat_id)}'
 url_result = requests.get(url).text
 soup = BS(url_result, 'html.parser')
 
-stations = soup.find('msgbody')  ##
+stations = soup.find('msgbody') ##
 station_list[chat_id] = list(stations)
-# print(stations)
-# print(station_list.get(chat_id))
-
-# for idx, station in enumerate(station_list.get(chat_id)):  # 정류장리스트에서 입력받은 단어가 포함된 정류장 찾기 ##
-#     if user_msg.get(chat_id) in station.find('stationname').contents[0]:
-#         print(station.find('stationname').contents[0])
 
 index = 0
-            # station_list = list(station_list)
-# station_include[chat_id] = []
-# for idx, station in enumerate(station_list.get(chat_id)):  # 정류장리스트에서 입력받은 단어가 포함된 정류장 찾기 ##
-#     if user_msg.get(chat_id) in station.find('stationname').contents[0]:
-#         if idx < len(station_list.get(chat_id)) - 1:
-#             station_include[chat_id].append([])
-#             station_include[chat_id][index].append(station.find('stationid').contents[0])
-#             station_include[chat_id][index].append(station.find('stationname').contents[0])
-#             station_include[chat_id][index].append(station_list.get(chat_id)[idx + 1].find('stationname').contents[0])
-#             station_include[chat_id][index].append(station.find('stationseq').contents[0])
-#         index += 1
-# print(station_include)
 
-# if not station_include.get(chat_id):
-#     print('없음')
-#
-# if not station_include.get(chat_id):  # 일치하는 정류장이 하나도 없는 경우
-#     msg = '입력한 단어가 포함된 정류장이 없습니다.\n' \
-#           '탑승 정류장이 포함된 단어를 입력하세요. \n ' \
-#           'ex)시민의숲.양재꽃시장 -> 시민의숲, 양재, 꽃시장'
-#     print(msg)
-#     # reg_order[chat_id] = 2
-#     # user_msg[chat_id] = save_input[chat_id]
-#
-# else:
-#     msg = '탑승 정류장을 선택하세요. ex) 2, 2번\n' \
-#           '     탑승 정류장  ->  다음 정류장 (운행방향)'
-#     for idx, station in enumerate(station_include.get(chat_id)):
-#         msg += f'\n{idx + 1}. {station[1]}  ->  {station[2]}'
-#     print(msg)
+for idx, station in enumerate(station_list.get(chat_id)):  # 정류장리스트에서 입력받은 단어가 포함된 정류장 찾기 ##
+    if user_msg.get(chat_id) in station.find('stationnm').contents[0]:
+        if idx < len(station_list.get(chat_id)) - 1:
+            station_include[chat_id].append([])
+            station_include[chat_id][index].append(station.find('station').contents[0])
+            station_include[chat_id][index].append(station.find('stationnm').contents[0])
+            station_include[chat_id][index].append(station_list.get(chat_id)[idx + 1].find('stationnm').contents[0])
+            station_include[chat_id][index].append(station.find('seq').contents[0])
+            index += 1
 
 
+print(station_include[chat_id])
+msg = '정류장을 선택하세요'
+for idx, station in enumerate(station_include.get(chat_id)):
+    # if idx < len(station_include.get(chat_id)):
+    msg += f'\n{idx + 1}. {station[1]}  ->  {station[2]}'
 
+print(msg)
 
-print(round(time.time()))
-print(time.time())
+## 버스 알림 테스트해보기
+station_id = station_include[chat_id][0][0]
+route_id = routeid[chat_id]
+station_order = station_include[chat_id][0][3]
+
+print(station_id, route_id, station_order)
+
+url = f'http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRoute?serviceKey={bus_key}&stId={station_id}&busRouteId={route_id}&ord={station_order}'
+request = requests.get(url).text
+soup = BS(request, 'html.parser')
+
+bus1 = soup.find('arrmsg1').contents[0]
+bus2 = soup.find('arrmsg2').contents[0]
+
+bus1 = '28분11초후[13번째 전]'
+# bus1 = '곧 도착'
+if bus1.find('분') != -1:
+    bus1_minute = bus1[:bus1.find('분')]
+    bus1_location = bus1[bus1.find('[')+1:bus1.find('번')]
+print(bus1)
+print(type(bus1_minute))
+print(bus1_location)
