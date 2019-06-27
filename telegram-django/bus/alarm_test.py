@@ -15,12 +15,16 @@ user_msg = {}
 station_list = {}
 
 # 버스 번호입력 하세요
-bus_number[chat_id] = '5100'
+bus_number[chat_id] = '150033'
 
 url = f'http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList?serviceKey={bus_key}&strSrch={bus_number.get(chat_id)}'
 url_result = requests.get(url).text
 soup = BS(url_result, 'html.parser')
 bus_list[chat_id] = soup.find('msgbody')
+print('bus_list=', str(bus_list.get(chat_id)))
+if str(bus_list.get(chat_id)) == '<msgbody></msgbody>':
+    print('tttttt')
+
 
 # 버스 리스트 출력
 msg = '버스를 선택하세요'

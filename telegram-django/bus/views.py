@@ -144,7 +144,7 @@ def tel(request):
                 soup = BS(url_result, 'html.parser')
                 bus_list[chat_id] = soup.find('msgbody')
 
-                if not bus_list.get(chat_id):
+                if not bus_list.get(chat_id) or str(bus_list.get(chat_id)) == '<msgbody></msgbody>':
                     msg = '해당하는 버스가 없습니다.\n' \
                           '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
                           'ex) 경기 88-1, 서울 420'
@@ -288,6 +288,7 @@ def tel(request):
                 else:  # if bus_stop < len(station_include.get(chat_id)):
 
                     if go_or_out.get(chat_id) == 'go':
+
                         busgo = BusGo()
                         busgo.chat_id = chat_id
                         busgo.go_bus_number = bus_number.get(chat_id)
