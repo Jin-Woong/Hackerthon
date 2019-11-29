@@ -19,6 +19,7 @@ token = config('TOKEN')
 bus_key = config('BUS_KEY')
 api_url = f'https://api.telegram.org/bot{token}'
 
+# 사용자마다 각각 id로 채팅내용을 구별하기 위해 자료형을 딕셔너리로 설정
 reg_order = {}
 routeid_list = {}
 save_input = {}
@@ -58,19 +59,21 @@ def tel(request):
     # user_msg[chat_id] = message.get('text')
     # if message is not None:
     if message is not None:
-        chat_id = message.get('from').get('id')
-        user_msg[chat_id] = message.get('text')
+        chat_id = message.get('from').get('id') # 사용자 id
+        user_msg[chat_id] = message.get('text') # 사용자id : 채팅내용 형태로 딕셔너리 저장
         # p = re.compile('[종료|정지|중지|그만|멈춰]')  # 종료, 정지 등의 단어가 포함되는지 확인
         print('0 order=', reg_order.get(chat_id), 'save=', save_input.get(chat_id))
 
+        # 10초가 지난 메세지들은 무시, webhook에 딜레이가 생길 경우 대화 단계가 꼬일 수 있다.
         if (round(time.time())-message.get('date')) > 10:
-            print('time=', (round(time.time())-message.get('date')))
+            print('ignore msg,time=', message.get('text'),(round(time.time())-message.get('date')))
             return JsonResponse({})
 
+        # 채팅내용이 없는 경우
         elif not user_msg.get(chat_id):
             return JsonResponse({})
 
-        # elif p.match(user_msg.get(chat_id)):
+        # 채팅 내용에 정지 관련 단어가 있는 경우
         elif len(user_msg.get(chat_id)) > 1 and user_msg.get(chat_id) in ['그만', '종료', '정지', '멈춰', '중지']:
             cron = f'sudo crontab -u {chat_id} -r'  # 해당 계정의 크론탭을 삭제 후
             user = f'sudo userdel -f {chat_id}'  # 계정을 삭제, 계정 먼저 삭제 시 크론탭 삭제 불가능
@@ -80,8 +83,9 @@ def tel(request):
             # msg = '버스 알림을 종료합니다.'
             # requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
 
+        # 채팅 내용 뒤의 두 글자가 등록인 경우
         elif user_msg.get(chat_id)[-2:] == '등록':
-            if reg_order.get(chat_id) is not None:
+            if reg_order.get(chat_id) is not None:  # 기존의 대화단계가 존재할 경우 삭제
                 del reg_order[chat_id]
             if user_msg.get(chat_id)[:2] == '출근':  # 등록을 입력 후 처음 메세지
                 msg = '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
@@ -92,6 +96,7 @@ def tel(request):
                 save_input[chat_id] = user_msg.get(chat_id)
                 go_or_out[chat_id] = 'go'
                 print('1 order=', reg_order.get(chat_id), 'save=', save_input.get(chat_id))
+
             elif user_msg.get(chat_id)[:2] == '퇴근':
                 msg = '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
                       'ex) 경기 88-1, 서울 420'
@@ -102,29 +107,33 @@ def tel(request):
                 go_or_out[chat_id] = 'out'
                 print('1 order=', reg_order.get(chat_id), 'save=', save_input.get(chat_id))
 
-            # elif input_text[:2] == '퇴근':
-            #     msg = '버스 번호를 입력하세요 ex) 88-1'
-            #     requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
-            #     reg_order[chat_id] = 1  # 등록 1단계 버스 번호 입력 받기
-        elif reg_order.get(chat_id) == 1 and save_input.get(chat_id) != user_msg.get(chat_id):  # 버스 번호 입력 받은 후 버스 선택
+                # elif input_text[:2] == '퇴근':
+                #     msg = '버스 번호를 입력하세요 ex) 88-1'
+                #     requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
+                #     reg_order[chat_id] = 1  # 등록 1단계 버스 번호 입력 받기
+            
+        elif reg_order.get(chat_id) == 1 and save_input.get(chat_id) != user_msg.get(chat_id):  # 버스 번호 입력 받은 후 버스 리스트 출력
             # bus_number = re.findall('\d+-?\d+', input_text)[0]
+            
+            # 버스 번호 추출  xxx-x, xxx 형태
+            bus_number[chat_id] = re.findall(r'\d+-?\d+', user_msg.get(chat_id))  # 메세지에서 숫자 또는 정수-정수 추출
+            if not bus_number[chat_id]:
+                bus_number[chat_id] = re.findall('\d+', user_msg.get(chat_id))  # 한 자리 정수 추출, 위의 d+형태는 두 자리 이상 정수만 추출되어 보완
+            
             if len(user_msg.get(chat_id)) < 2:
                 msg = '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
                       'ex) 경기 88-1, 서울 420'
                 send_msg(chat_id, msg)
                 return JsonResponse({})
-            if user_msg.get(chat_id)[:2] != '경기' and user_msg.get(chat_id)[:2] != '서울':
-                msg = '서울, 경기 버스만 등록 가능합니다.\n' \
+            elif user_msg.get(chat_id)[:2] != '경기' and user_msg.get(chat_id)[:2] != '서울':
+                msg = '서울, 경기 지역을 선택해주세요.\n' \
                       '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
                       'ex) 경기 88-1, 서울 420'
                 send_msg(chat_id, msg)
                 return JsonResponse({})
 
-            bus_number[chat_id] = re.findall('\d+-?\d+', user_msg.get(chat_id))  # 메세지에서 숫자 또는 정수-정수 추출
-            if not bus_number[chat_id]:
-                bus_number[chat_id] = re.findall('\d+', user_msg.get(chat_id))  # 정수 추출
-            if not bus_number.get(chat_id):
-                msg = '숫자를 포함해서 입력해주세요.\n' \
+            elif not bus_number.get(chat_id):
+                msg = '버스 번호와 함께 입력해주세요.\n' \
                       '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
                       'ex) 경기 88-1, 서울 420'
                 send_msg(chat_id, msg)

@@ -15,7 +15,7 @@ user_msg = {}
 station_list = {}
 
 # 버스 번호입력 하세요
-bus_number[chat_id] = '150033'
+bus_number[chat_id] = '72'
 
 url = f'http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList?serviceKey={bus_key}&strSrch={bus_number.get(chat_id)}'
 url_result = requests.get(url).text
@@ -45,7 +45,7 @@ print(msg)
 print(routeid_list)
 
 # 버스 선택
-idx = 2-1
+idx = 0
 routeid[chat_id] = routeid_list[chat_id][idx]
 
 # 탑승 정류장 입력
