@@ -60,7 +60,7 @@ def tel(request):
     # if message is not None:
     if message is not None:
         chat_id = message.get('from').get('id') # 사용자 id
-        user_msg[chat_id] = message.get('text') # 사용자id : 채팅내용 형태로 딕셔너리 저장
+        user_msg[chat_id] = message.get('text') # 사용자 id : 채팅내용 형태로 딕셔너리 저장
         # p = re.compile('[종료|정지|중지|그만|멈춰]')  # 종료, 정지 등의 단어가 포함되는지 확인
         print('0 order=', reg_order.get(chat_id), 'save=', save_input.get(chat_id))
 
@@ -115,35 +115,42 @@ def tel(request):
         elif reg_order.get(chat_id) == 1 and save_input.get(chat_id) != user_msg.get(chat_id):  # 버스 번호 입력 받은 후 버스 리스트 출력
             # bus_number = re.findall('\d+-?\d+', input_text)[0]
             
-            # 버스 번호 추출  xxx-x, xxx 형태
-            bus_number[chat_id] = re.findall(r'\d+-?\d+', user_msg.get(chat_id))  # 메세지에서 숫자 또는 정수-정수 추출
-            if not bus_number[chat_id]:
-                bus_number[chat_id] = re.findall('\d+', user_msg.get(chat_id))  # 한 자리 정수 추출, 위의 d+형태는 두 자리 이상 정수만 추출되어 보완
-            
+            # 정규식 활용 버스 번호 추출  xxx-x, xxx 형태
+            # bus_number[chat_id] = re.findall(r'\d+-?\d+', user_msg.get(chat_id))  # 메세지에서 숫자 또는 정수-정수 추출
+            # if not bus_number[chat_id]:
+            #     bus_number[chat_id] = re.findall('\d+', user_msg.get(chat_id))  # 한 자리 정수 추출, 위의 d+형태는 두 자리 이상 정수만 추출되어 보완
+            # 기존 정수 추출 정규식에서 모든 문자 추출로 변경, ex) 강남, 강남1-1과 같은버스가 존재하므로
+            bus_number[chat_id] = re.findall(r'\S+',user_msg.get(chat_id)[2:])
+
+            # 메세지가 2글자 이하인 경우 지역 또는 버스번호 입력 안한 것으로 판단
             if len(user_msg.get(chat_id)) < 2:
                 msg = '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
-                      'ex) 경기 88-1, 서울 420'
-                send_msg(chat_id, msg)
-                return JsonResponse({})
-            elif user_msg.get(chat_id)[:2] != '경기' and user_msg.get(chat_id)[:2] != '서울':
-                msg = '서울, 경기 지역을 선택해주세요.\n' \
-                      '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
-                      'ex) 경기 88-1, 서울 420'
+                      '예시) 경기 88-1, 서울 420'
                 send_msg(chat_id, msg)
                 return JsonResponse({})
 
+            # 메세지에 서울, 경기가 아닌 다른 단어를 입력한 경우
+            elif user_msg.get(chat_id)[:2] != '경기' and user_msg.get(chat_id)[:2] != '서울':
+                msg = '서울, 경기 지역을 선택해주세요.\n' \
+                      '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
+                      '예시) 경기 88-1, 서울 420'
+                send_msg(chat_id, msg)
+                return JsonResponse({})
+
+            # 메세지에 버스 번호가 없는 경우
             elif not bus_number.get(chat_id):
                 msg = '버스 번호와 함께 입력해주세요.\n' \
                       '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
-                      'ex) 경기 88-1, 서울 420'
+                      '예시) 경기 88-1, 서울 420'
                 send_msg(chat_id, msg)
+                return JsonResponse({})
 
             else:
                 if user_msg.get(chat_id)[:2] == '경기':
                     region[chat_id] = 'gyeonggi'
                 else:
                     region[chat_id] = 'seoul'
-                bus_number[chat_id] = bus_number[chat_id][0]
+                bus_number[chat_id] = bus_number[chat_id][0]    # 버스번호추출 하는 과정에서 할 경우 버스번호가 없을 때 인덱스에러가 발생할 수 있다.
                 print('지역=',region.get(chat_id),'버스넘버:', bus_number.get(chat_id))
                 if region.get(chat_id) == 'gyeonggi':
                     url = f'http://openapi.gbis.go.kr/ws/rest/busrouteservice?serviceKey={bus_key}&keyword={bus_number.get(chat_id)}'
@@ -156,7 +163,7 @@ def tel(request):
                 if not bus_list.get(chat_id) or str(bus_list.get(chat_id)) == '<msgbody></msgbody>':
                     msg = '해당하는 버스가 없습니다.\n' \
                           '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
-                          'ex) 경기 88-1, 서울 420'
+                          '예시) 경기 88-1, 서울 420'
                     send_msg(chat_id, msg)
                     
                 else:
@@ -165,15 +172,15 @@ def tel(request):
                     routeid_list[chat_id] = []
                     bus_numbers[chat_id] = []
                     if region.get(chat_id) == 'gyeonggi':
-                        if len(bus_number.get(chat_id)) < 2:
-                            idx = 0
+                        if len(bus_number.get(chat_id)) < 2:    # 버스 번호가 한자리인 경우 완전히 일치하는 버스만 출력, 한자리가 포함된 버스가 수백건이라서..
+                            idx = 0 # 조건에 맞는 버스 출력이므로 enumerate 사용 시 index가 순차적으로 출력되지 않는다.
                             for bus in bus_list.get(chat_id):
                                 if bus.find("routename").contents[0] == bus_number.get(chat_id):
                                     msg += f'\n{idx + 1}. 버스 : {bus.find("routename").contents[0]} / 지역: {bus.find("regionname").contents[0]}'
                                     routeid_list[chat_id].append(bus.find('routeid').contents[0])
                                     bus_numbers[chat_id].append(bus.find("routename").contents[0])
                                     idx += 1
-                        else:
+                        else: # 버스 번호가 두자리 이상인 경우 해당 번호가 포함되는 모든 버스 출력
                             for idx, bus in enumerate(bus_list.get(chat_id)):
                                 msg += f'\n{idx + 1}. 버스 : {bus.find("routename").contents[0]} / 지역: {bus.find("regionname").contents[0]}'
                                 routeid_list[chat_id].append(bus.find('routeid').contents[0])
@@ -211,7 +218,7 @@ def tel(request):
                     routeid[chat_id] = routeid_list.get(chat_id)[idx]
                     bus_number[chat_id] = bus_numbers.get(chat_id)[idx]
                     msg = '탑승할 정류장에 포함된 단어를 입력하세요. \n ' \
-                          '  ex) 관악우체국 -> 관악, 우체국'
+                          '  예시) 관악우체국 -> 관악, 우체국'
                     send_msg(chat_id, msg)
 
                     reg_order[chat_id] = 3
@@ -265,14 +272,14 @@ def tel(request):
             if not station_include.get(chat_id):  # 일치하는 정류장이 하나도 없는 경우
                 msg = '입력한 단어가 포함된 정류장이 없습니다.\n' \
                       '탑승할 정류장에 포함된 단어를 입력하세요. \n ' \
-                      '  ex) 관악우체국 -> 관악, 우체국'
+                      '  예시) 관악우체국 -> 관악, 우체국'
                 send_msg(chat_id, msg)
                 # reg_order[chat_id] = 2
                 # user_msg[chat_id] = save_input[chat_id]
                 # save_input[chat_id] = None
 
             else:
-                msg = '탑승 정류장을 선택하세요. ex) 2, 2번\n' \
+                msg = '탑승 정류장을 선택하세요. 예시) 2, 2번\n' \
                       '**탑승 정류장 -> 다음 정류장 (운행방향)**'
                 for idx, station in enumerate(station_include.get(chat_id)):
                     # if idx < len(station_include.get(chat_id)):
@@ -329,51 +336,39 @@ def tel(request):
 
                     if reg_order.get(chat_id):
                         del reg_order[chat_id]
-                        print('del 1')
                     if routeid_list.get(chat_id):
                         del routeid_list[chat_id]
-                        print('del 2')
                     if save_input.get(chat_id):
                         del save_input[chat_id]
-                        print('del 3')
                     if bus_len.get(chat_id):
                         del bus_len[chat_id]
-                        print('del 4')
                     if routeid.get(chat_id):
                         del routeid[chat_id]
-                        print('del 5')
                     if station_include.get(chat_id):
                         del station_include[chat_id]
-                        print('del 6')
                     if user_msg.get(chat_id):
                         del user_msg[chat_id]
-                        print('del 7')
                     if station_list.get(chat_id):
                         del station_list[chat_id]
-                        print('del 8')
                     if bus_list.get(chat_id):
                         del bus_list[chat_id]
-                        print('del 9')
                     if bus_number.get(chat_id):
                         del bus_number[chat_id]
-                        print('del 10')
                     if bus_numbers.get(chat_id):
                         del bus_numbers[chat_id]
-                        print('del 11')
                     if region.get(chat_id):
                         del region[chat_id]
-                        print('del 12')
                     if go_or_out.get(chat_id):
                         del go_or_out[chat_id]
-                        print('del 13')
+                    print('delete bus info')
 
         elif user_msg.get(chat_id)[:2] == '출근' and user_msg.get(chat_id)[-2:] != '등록' and re.findall('\d+', user_msg.get(chat_id)):
                 minute = re.findall('\d+', user_msg.get(chat_id))
                 if '전' in user_msg.get(chat_id):
                     busgo = BusGo.objects.filter(chat_id=chat_id).last()
                     if not busgo:
-                        msg = '출근 버스를 등록하세요.\n' \
-                            'ex) 출근 버스 등록'
+                        msg = '먼저 출근 버스를 등록하세요.\n' \
+                            '예시) 출근 버스 등록'
                         send_msg(chat_id, msg)
                     else:
                         user = f'sudo useradd -d /home/ubuntu -u 500 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
@@ -388,8 +383,8 @@ def tel(request):
                 elif '마다' in user_msg.get(chat_id):
                     busgo = BusGo.objects.filter(chat_id=chat_id).last()
                     if not busgo:
-                        msg = '출근 버스를 등록하세요.\n' \
-                              'ex) 출근 버스 등록'
+                        msg = '먼저 출근 버스를 등록하세요.\n' \
+                              '예시) 출근 버스 등록'
                         send_msg(chat_id, msg)
                     else:
                         user = f'sudo useradd -d /home/ubuntu -u 500 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
@@ -407,8 +402,8 @@ def tel(request):
             if '전' in user_msg.get(chat_id):
                 busout = BusOut.objects.filter(chat_id=chat_id).last()
                 if not busout:
-                    msg = '퇴근 버스를 등록하세요.\n' \
-                        'ex) 퇴근 버스 등록'
+                    msg = '먼저 퇴근 버스를 등록하세요.\n' \
+                        '예시) 퇴근 버스 등록'
                     send_msg(chat_id, msg)
                 else:
                     user = f'sudo useradd -d /home/ubuntu -u 500 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
@@ -424,8 +419,8 @@ def tel(request):
             elif '마다' in user_msg.get(chat_id):
                 busout = BusOut.objects.filter(chat_id=chat_id).last()
                 if not busout:
-                    msg = '퇴근 버스를 등록하세요.\n' \
-                          'ex) 퇴근 버스 등록'
+                    msg = '먼저 퇴근 버스를 등록하세요.\n' \
+                          '예시) 퇴근 버스 등록'
                     send_msg(chat_id, msg)
                 else:
                     user = f'sudo useradd -d /home/ubuntu -u 500 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
