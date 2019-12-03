@@ -16,4 +16,5 @@ for i in res_json["tunnels"]:
 
 token = config('TOKEN')
 api_url = f'https://api.telegram.org/bot{token}//setWebhook?url={ngrok_url}/{token}'
+print('curl '+api_url)
 os.system('curl '+api_url)
