@@ -391,7 +391,7 @@ def tel(request):
                     else:
                         user = f'sudo useradd -d /home/ubuntu -u 1000 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
                         # 크론탭 시간 1분은 좀 긴거 같고 30초 간격으로 수정해야할듯..
-                        cron = f'(crontab -l 2>/dev/null; echo "*/{minute[0]} * * * * python3 /home/ubuntu/telegram_alarm/telegram-django/bus_alarm.py {chat_id} 100 go") | sudo crontab -u {chat_id} -'
+                        cron = f'(crontab -l 2>/dev/null; echo "*/{minute[0]} * * * * python3 /home/ubuntu/telegram_alarm/telegram-django/bus_alarm.py {chat_id} 300 go") | sudo crontab -u {chat_id} -'
                         os.system(user)
                         os.system(cron)
                         msg = f'{busgo.go_bus_number}번 버스 도착 {minute[0]}분 마다 알림\n' \
@@ -426,7 +426,7 @@ def tel(request):
                     send_msg(chat_id, msg)
                 else:
                     user = f'sudo useradd -d /home/ubuntu -u 1000 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
-                    cron = f'(crontab -l 2>/dev/null; echo "*/{minute[0]} * * * * python3 /home/ubuntu/telegram_alarm/telegram-django/bus_alarm.py {chat_id} 100 out") | sudo crontab -u {chat_id} -'
+                    cron = f'(crontab -l 2>/dev/null; echo "*/{minute[0]} * * * * python3 /home/ubuntu/telegram_alarm/telegram-django/bus_alarm.py {chat_id} 300 out") | sudo crontab -u {chat_id} -'
                     os.system(user)
                     os.system(cron)
                     msg = f'{busout.out_bus_number}번 버스 도착 {minute[0]}분 마다 알림\n' \
