@@ -71,10 +71,14 @@ if station_id is not None:
             location2 = soup.find('locationno2').contents[0]
             seat2 = soup.find('remainseatcnt2').contents[0]
 
-            if int(predict1) <= int(minute):
-                msg = f'직전 버스: {predict1}분 ({location1}정류장) [{seat1}좌석]\n' \
-                    f'다음 버스: {predict2}분 ({location2}정류장) [{seat2}좌석]\n' \
-                    f'알림 정지: "정지", "종료" 입력'
+            msg += f'직전 버스: {predict1}분 ({location1}정류장) [{seat1}좌석]\n' \
+                   f'다음 버스: {predict2}분 ({location2}정류장) [{seat2}좌석]\n' \
+                   f'알림 정지: "정지", "종료" 입력'
+
+            if int(minute) == 300:
+                requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
+
+            elif int(predict1) <= int(minute):
                 requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
 
     else:  # region == 'seoul'
@@ -99,12 +103,11 @@ if station_id is not None:
         else:
             msg += f'다음 버스: {bus2}'
 
-        if int(bus1_minute) <= int(minute):
-            requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
-        else:
-            msg = f'seoul bus test {bus1} {bus2}'
+        if int(minute) == 300:
             requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
 
+        elif int(bus1_minute) <= int(minute):
+            requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
 else:
     msg = 'DB 읽는 도중 에러가 발생했습니다.\n' \
           '버스를 다시 등록해주세요.'
@@ -116,4 +119,3 @@ else:
 # if __name__ == '__main__':
 #     path = os.path.dirname(__file__)
 #     from .models import BusGo, BusOut
-
