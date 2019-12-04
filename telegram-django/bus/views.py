@@ -89,7 +89,7 @@ def tel(request):
                 del reg_order[chat_id]
             if user_msg.get(chat_id)[:2] == '출근':  # 등록을 입력 후 처음 메세지
                 msg = '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
-                      'ex) 경기 88-1, 서울 420'
+                      f'sudo useradd -d /home/ubuntu -u 1000 경기 88-1, 서울 420'
                 send_msg(chat_id, msg)
 
                 reg_order[chat_id] = 1  # 등록 1단계 버스 번호 입력 받기
@@ -99,7 +99,7 @@ def tel(request):
 
             elif user_msg.get(chat_id)[:2] == '퇴근':
                 msg = '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
-                      'ex) 경기 88-1, 서울 420'
+                      f'sudo useradd -d /home/ubuntu -u 1000 경기 88-1, 서울 420'
                 send_msg(chat_id, msg)
 
                 reg_order[chat_id] = 1  # 등록 1단계 버스 번호 입력 받기
@@ -108,7 +108,7 @@ def tel(request):
                 print('1 order=', reg_order.get(chat_id), 'save=', save_input.get(chat_id))
 
                 # elif input_text[:2] == '퇴근':
-                #     msg = '버스 번호를 입력하세요 ex) 88-1'
+                #     msg = '버스 번호를 입력하세요 f'sudo useradd -d /home/ubuntu -u 1000 88-1'
                 #     requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
                 #     reg_order[chat_id] = 1  # 등록 1단계 버스 번호 입력 받기
             
@@ -119,7 +119,7 @@ def tel(request):
             # bus_number[chat_id] = re.findall(r'\d+-?\d+', user_msg.get(chat_id))  # 메세지에서 숫자 또는 정수-정수 추출
             # if not bus_number[chat_id]:
             #     bus_number[chat_id] = re.findall('\d+', user_msg.get(chat_id))  # 한 자리 정수 추출, 위의 d+형태는 두 자리 이상 정수만 추출되어 보완
-            # 기존 정수 추출 정규식에서 모든 문자 추출로 변경, ex) 강남, 강남1-1과 같은버스가 존재하므로
+            # 기존 정수 추출 정규식에서 모든 문자 추출로 변경, 예시) 강남, 강남1-1과 같은버스가 존재하므로
             bus_number[chat_id] = re.findall(r'\S+',user_msg.get(chat_id)[2:])
 
             # 메세지가 2글자 이하인 경우 지역 또는 버스번호 입력 안한 것으로 판단
@@ -167,7 +167,7 @@ def tel(request):
                     send_msg(chat_id, msg)
                     
                 else:
-                    msg = '버스를 선택하세요. ex) 1, 1번'
+                    msg = '버스를 선택하세요. 예시) 1, 1번'
                     # requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
                     routeid_list[chat_id] = []
                     bus_numbers[chat_id] = []
@@ -435,9 +435,8 @@ def tel(request):
                 print('end')
 
         elif user_msg.get(chat_id) in ['/start', '안녕', '메뉴', '김비서', '하이']:
-            msg = '''안녕하세요. 김비서입니다 :D
+            msg = '''버스도착알림 서비스입니다 :D
 원하는 알림을 아래와 같이 설정해보세요.
-예) 교통정보알림 설정 방법
 - (등록 방법) “출근/퇴근 버스 등록” 입력 
 - (등록 후) “출근/퇴근 xx분 전/마다 알림” 입력
 - (알림정지방법) "정지" 또는 "종료" 입력'''

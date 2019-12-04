@@ -16,7 +16,7 @@ print(int(m))
 # reg_order = {}
 # reg_order['tempid'] = 1
 # routeid_list = []
-# print('버스를 선택하세요. ex) 1, 1번')
+# print('버스를 선택하세요. f'sudo useradd -d /home/ubuntu -u 1000 1, 1번')
 # for idx, bus in enumerate(bus_list):
 #     print(idx + 1)
 #     print('운행지역:' + bus.find('regionname').contents[0])
@@ -49,7 +49,7 @@ print('2', reg_order)
 # print(bus_list)
 
 # routeid_list = []
-# msg = '버스를 선택하세요. ex) 1, 1번'
+# msg = '버스를 선택하세요. f'sudo useradd -d /home/ubuntu -u 1000 1, 1번'
 # requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
 # print(msg)
 # for idx, bus in enumerate(bus_list):

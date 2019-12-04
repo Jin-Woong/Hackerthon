@@ -97,7 +97,7 @@ def telegram():
             if reg_order.get(chat_id) is not None:
                 del reg_order[chat_id]
             if user_msg.get(chat_id)[:2] == '출근':  # 등록을 입력 후 처음 메세지
-                send_msg(chat_id, '버스 번호를 입력하세요 ex) 88-1, 88-1번')
+                send_msg(chat_id, '버스 번호를 입력하세요 f'sudo useradd -d /home/ubuntu -u 1000 88-1, 88-1번')
 
                 reg_order[chat_id] = 1  # 등록 1단계 버스 번호 입력 받기
                 save_input[chat_id] = user_msg.get(chat_id)
@@ -105,7 +105,7 @@ def telegram():
                 print('1 order=', reg_order.get(chat_id), 'save=', save_input.get(chat_id))
 
             # elif input_text[:2] == '퇴근':
-            #     msg = '버스 번호를 입력하세요 ex) 88-1'
+            #     msg = '버스 번호를 입력하세요 f'sudo useradd -d /home/ubuntu -u 1000 88-1'
             #     requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
             #     reg_order[chat_id] = 1  # 등록 1단계 버스 번호 입력 받기
         elif reg_order.get(chat_id) == 1 and save_input.get(chat_id) != user_msg.get(chat_id):  # 버스 번호 입력 받은 후 버스 선택
@@ -117,7 +117,7 @@ def telegram():
             soup = BS(url_result, 'html.parser')
             bus_list = soup.find('msgbody')
 
-            msg = '버스를 선택하세요. ex) 1, 1번'
+            msg = '버스를 선택하세요. f'sudo useradd -d /home/ubuntu -u 1000 1, 1번'
             # requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
             for idx, bus in enumerate(bus_list):
                 msg += f'\n{idx + 1}. 지역 : {bus.find("regionname").contents[0]}/번호:{bus.find("routename").contents[0]}'
@@ -135,7 +135,7 @@ def telegram():
             routeid = routeid_list[idx - 1]
 
             msg = '탑승 정류장이 포함된 단어를 입력하세요. \n ' \
-                  'ex)시민의숲.양재꽃시장 -> 시민의숲, 양재, 꽃시장'
+                  'f'sudo useradd -d /home/ubuntu -u 1000시민의숲.양재꽃시장 -> 시민의숲, 양재, 꽃시장'
             send_msg(chat_id, msg)
 
             reg_order[chat_id] = 3
