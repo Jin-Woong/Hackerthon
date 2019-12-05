@@ -434,7 +434,7 @@ def tel(request):
                     send_msg(chat_id, msg)
                 print('end')
 
-        elif user_msg.get(chat_id) in ['/start', '안녕', '메뉴', '김비서', '하이']:
+        elif user_msg.get(chat_id) in ['/start', '안녕', '메뉴', '하이','?']:
             msg = '''버스도착알림 서비스입니다 :D
 원하는 알림을 아래와 같이 설정해보세요.
 - (등록 방법) “출근/퇴근 버스 등록” 입력 
