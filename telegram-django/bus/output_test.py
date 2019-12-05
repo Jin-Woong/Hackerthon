@@ -27,7 +27,7 @@ print("but list")
 bus_list = {};
 routeid_list = {};
 bus_numbers = {};
-bus_number={};
+bus_number = {};
 chat_id = '884070245'
 bus_key = config("BUS_KEY")
 bus_number[chat_id] = '누리1'
@@ -37,13 +37,14 @@ url_result = requests.get(url).text
 soup = BS(url_result, 'html.parser')
 bus_list[chat_id] = soup.find('msgbody')
 
-msg = '(등록 방법) : "출근 버스 등록"\n' \
-      '                     "퇴근 버스 등록"\n' \
-      '(알림 요청) : "출근 버스 10분전 알림"\n' \
-      '                     "출근버스 3분마다 알려줘"\n' \
-      '                     "퇴근버스 10분전에 알려줘"\n' \
-      '(정지 방법) : "정지" "종료" 등 입력\n' \
-      '   **위의 예시와 유사하게 입력하세요** '
+msg = '버스도착알림 서비스입니다 :D\n' \
+      '등록, 알림을 위해 아래와 같이 입력하세요.\n' \
+      '(등록 방법) "출근 버스 등록"\n' \
+      '                   "퇴근 버스 등록"\n' \
+      '(알림 요청) "출근 버스 10분 전에 알림"\n' \
+      '                   "출근 버스 3분마다 알려줘"\n' \
+      '                   "퇴근 버스 20분 전에 알려줘"\n' \
+      '(알림 정지) "정지" 또는 "종료" 입력'
 send_msg(chat_id, msg)
 
 # if not bus_list.get(chat_id) or str(bus_list.get(chat_id)) == '<msgbody></msgbody>':
