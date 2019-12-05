@@ -87,7 +87,7 @@ def tel(request):
                 del reg_order[chat_id]
             if user_msg.get(chat_id)[:2] == '출근':  # 등록을 입력 후 처음 메세지
                 msg = '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
-                      f'sudo useradd -d /home/ubuntu -u 1000 경기 88-1, 서울 420'
+                      '예시) 경기 88-1, 서울 420'
                 send_msg(chat_id, msg)
 
                 reg_order[chat_id] = 1  # 등록 1단계 버스 번호 입력 받기
@@ -97,7 +97,7 @@ def tel(request):
 
             elif user_msg.get(chat_id)[:2] == '퇴근':
                 msg = '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
-                      f'sudo useradd -d /home/ubuntu -u 1000 경기 88-1, 서울 420'
+                      '예시) 1000 경기 88-1, 서울 420'
                 send_msg(chat_id, msg)
 
                 reg_order[chat_id] = 1  # 등록 1단계 버스 번호 입력 받기
