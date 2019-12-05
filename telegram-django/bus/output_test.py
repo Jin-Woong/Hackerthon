@@ -2,6 +2,7 @@ import re
 import requests
 from bs4 import BeautifulSoup as BS
 from decouple import config
+from send_message import send_msg
 
 print("start")
 msg = '경기 3'
@@ -27,7 +28,7 @@ bus_list = {};
 routeid_list = {};
 bus_numbers = {};
 bus_number={};
-chat_id = '123123'
+chat_id = '884070245'
 bus_key = config("BUS_KEY")
 bus_number[chat_id] = '누리1'
 
@@ -36,32 +37,41 @@ url_result = requests.get(url).text
 soup = BS(url_result, 'html.parser')
 bus_list[chat_id] = soup.find('msgbody')
 
-if not bus_list.get(chat_id) or str(bus_list.get(chat_id)) == '<msgbody></msgbody>':
-    msg = '해당하는 버스가 없습니다.\n' \
-          '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
-          'ex) 경기 88-1, 서울 420'
-    # send_msg(chat_id, msg)
-    print(msg)
+msg = '(등록 방법) : "출근 버스 등록"\n' \
+      '                     "퇴근 버스 등록"\n' \
+      '(알림 요청) : "출근 버스 10분전 알림"\n' \
+      '                     "출근버스 3분마다 알려줘"\n' \
+      '                     "퇴근버스 10분전에 알려줘"\n' \
+      '(정지 방법) : "정지" "종료" 등 입력\n' \
+      '   **위의 예시와 유사하게 입력하세요** '
+send_msg(chat_id, msg)
 
-else:
-    msg = '버스를 선택하세요. ex) 1, 1번'
-    # requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
-    routeid_list[chat_id] = []
-    bus_numbers[chat_id] = []
-    if len(bus_number.get(chat_id)) < 0:  # 버스 번호가 한자리인 경우 완전히 일치하는 버스만 출력
-        idx = 0
-        for idx, bus in enumerate(bus_list.get(chat_id)):
-            # 강남3
-            if bus.find("routename").contents[0] == bus_number.get(chat_id):
-                msg += f'\n{idx}. 버스 : {bus.find("routename").contents[0]} / 지역: {bus.find("regionname").contents[0]}'
-                routeid_list[chat_id].append(bus.find('routeid').contents[0])
-                bus_numbers[chat_id].append(bus.find("routename").contents[0])
-                idx += 1
-    else:  # 버스 번호가 두자리 이상인 경우 해당 번호가 포함되는 모든 버스 출력
-        for idx, bus in enumerate(bus_list.get(chat_id)):
-            msg += f'\n{idx + 1}. 버스 : {bus.find("routename").contents[0]} / 지역: {bus.find("regionname").contents[0]}'
-            routeid_list[chat_id].append(bus.find('routeid').contents[0])
-            bus_numbers[chat_id].append(bus.find("routename").contents[0])
+# if not bus_list.get(chat_id) or str(bus_list.get(chat_id)) == '<msgbody></msgbody>':
+#     msg = '해당하는 버스가 없습니다.\n' \
+#           '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
+#           'ex) 경기 88-1, 서울 420'
+#     # send_msg(chat_id, msg)
+#     print(msg)
+#
+# else:
+#     msg = '버스를 선택하세요. ex) 1, 1번'
+#     # requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
+#     routeid_list[chat_id] = []
+#     bus_numbers[chat_id] = []
+#     if len(bus_number.get(chat_id)) < 0:  # 버스 번호가 한자리인 경우 완전히 일치하는 버스만 출력
+#         idx = 0
+#         for idx, bus in enumerate(bus_list.get(chat_id)):
+#             # 강남3
+#             if bus.find("routename").contents[0] == bus_number.get(chat_id):
+#                 msg += f'\n{idx}. 버스 : {bus.find("routename").contents[0]} / 지역: {bus.find("regionname").contents[0]}'
+#                 routeid_list[chat_id].append(bus.find('routeid').contents[0])
+#                 bus_numbers[chat_id].append(bus.find("routename").contents[0])
+#                 idx += 1
+#     else:  # 버스 번호가 두자리 이상인 경우 해당 번호가 포함되는 모든 버스 출력
+#         for idx, bus in enumerate(bus_list.get(chat_id)):
+#             msg += f'\n{idx + 1}. 버스 : {bus.find("routename").contents[0]} / 지역: {bus.find("regionname").contents[0]}'
+#             routeid_list[chat_id].append(bus.find('routeid').contents[0])
+#             bus_numbers[chat_id].append(bus.find("routename").contents[0])
 
 print(msg)
 
