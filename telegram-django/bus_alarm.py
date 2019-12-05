@@ -30,7 +30,7 @@ if direction == 'go':
     busgo = BusGo.objects.filter(chat_id=chat_id).last()
     if busgo is None:
         msg = '출근 버스를 등록하세요.\n' \
-              'f'sudo useradd -d /home/ubuntu -u 1000 출근 버스 등록'
+              f'sudo useradd -d /home/ubuntu -u 1000 출근 버스 등록'
         requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
     else:
         station_id = busgo.go_station_id
@@ -42,7 +42,7 @@ else:  # direction == 'out'
     busout = BusOut.objects.filter(chat_id=chat_id).last()
     if busout is None:
         msg = '퇴근 버스를 등록하세요.\n' \
-              'f'sudo useradd -d /home/ubuntu -u 1000 퇴근 버스 등록'
+              f'sudo useradd -d /home/ubuntu -u 1000 퇴근 버스 등록'
         requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
 
     else:

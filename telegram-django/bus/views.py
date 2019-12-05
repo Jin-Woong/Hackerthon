@@ -20,19 +20,18 @@ bus_key = config('BUS_KEY')
 api_url = f'https://api.telegram.org/bot{token}'
 
 # 사용자마다 각각 id로 채팅내용을 구별하기 위해 자료형을 딕셔너리로 설정
-reg_order = {}
-routeid_list = {}
-save_input = {}
-bus_len = {}
-routeid = {}
-station_include = {}
-user_msg = {}
-station_list = {}
-bus_list = {}
-bus_numbers = {}
-bus_number = {}
-go_or_out = {}
-region = {}
+reg_order = {}          # 사용자의 버스 등록 단계
+routeid_list = {}       # 검색된 버스들의 고유 id
+save_input = {}         # 사용자의 마지막 채팅 내용
+routeid = {}            # 선택한 버스의 고유 id
+station_include = {}    # 입력한 단어가 포함된 정류장 목록
+user_msg = {}           # 사용자의 채팅 내용
+station_list = {}       # 버스가 운행하는 정류장 목록
+bus_list = {}           # 버스 번호로 검색된 전체 버스 목록
+bus_numbers = {}        # 사용자의 입력과 일치하는 버스 목록
+bus_number = {}         # 사용자의 입력에서 추출된 버스 번호
+go_or_out = {}          # 출근인지 퇴근
+region = {}             # 지역 (서울 or 경기)
 
 
 @require_POST
@@ -43,7 +42,6 @@ def tel(request):
     global reg_order
     global routeid_list
     global save_input
-    global bus_len
     global routeid
     global station_include
     global user_msg
@@ -204,7 +202,6 @@ def tel(request):
                                 bus_numbers[chat_id].append(bus.find("busroutenm").contents[0])
                     send_msg(chat_id, msg)
 
-                    # bus_len[chat_id] = len(bus_list.get(chat_id))  # 불필요한듯..
                     reg_order[chat_id] = 2
                     save_input[chat_id] = user_msg.get(chat_id)
                     print('2 order=', reg_order.get(chat_id), 'save=', save_input.get(chat_id), 'user_msg=',
@@ -340,8 +337,6 @@ def tel(request):
                         del routeid_list[chat_id]
                     if save_input.get(chat_id):
                         del save_input[chat_id]
-                    if bus_len.get(chat_id):
-                        del bus_len[chat_id]
                     if routeid.get(chat_id):
                         del routeid[chat_id]
                     if station_include.get(chat_id):
