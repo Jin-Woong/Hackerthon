@@ -20,18 +20,18 @@ bus_key = config('BUS_KEY')
 api_url = f'https://api.telegram.org/bot{token}'
 
 # 사용자마다 각각 id로 채팅내용을 구별하기 위해 자료형을 딕셔너리로 설정
-reg_order = {}          # 사용자의 버스 등록 단계
-routeid_list = {}       # 검색된 버스들의 고유 id
-save_input = {}         # 사용자의 마지막 채팅 내용
-routeid = {}            # 선택한 버스의 고유 id
-station_include = {}    # 입력한 단어가 포함된 정류장 목록
-user_msg = {}           # 사용자의 채팅 내용
-station_list = {}       # 버스가 운행하는 정류장 목록
-bus_list = {}           # 버스 번호로 검색된 전체 버스 목록
-bus_numbers = {}        # 사용자의 입력과 일치하는 버스 목록
-bus_number = {}         # 사용자의 입력에서 추출된 버스 번호
-go_or_out = {}          # 출근인지 퇴근
-region = {}             # 지역 (서울 or 경기)
+reg_order = {}  # 사용자의 버스 등록 단계
+routeid_list = {}  # 검색된 버스들의 고유 id
+save_input = {}  # 사용자의 마지막 채팅 내용
+routeid = {}  # 선택한 버스의 고유 id
+station_include = {}  # 입력한 단어가 포함된 정류장 목록
+user_msg = {}  # 사용자의 채팅 내용
+station_list = {}  # 버스가 운행하는 정류장 목록
+bus_list = {}  # 버스 번호로 검색된 전체 버스 목록
+bus_numbers = {}  # 사용자의 입력과 일치하는 버스 목록
+bus_number = {}  # 사용자의 입력에서 추출된 버스 번호
+go_or_out = {}  # 출근인지 퇴근
+region = {}  # 지역 (서울 or 경기)
 
 
 @require_POST
@@ -57,14 +57,14 @@ def tel(request):
     # user_msg[chat_id] = message.get('text')
     # if message is not None:
     if message is not None:
-        chat_id = message.get('from').get('id') # 사용자 id
-        user_msg[chat_id] = message.get('text') # 사용자 id : 채팅내용 형태로 딕셔너리 저장
+        chat_id = message.get('from').get('id')  # 사용자 id
+        user_msg[chat_id] = message.get('text')  # 사용자 id : 채팅내용 형태로 딕셔너리 저장
         # p = re.compile('[종료|정지|중지|그만|멈춰]')  # 종료, 정지 등의 단어가 포함되는지 확인
         print('0 order=', reg_order.get(chat_id), 'save=', save_input.get(chat_id))
 
         # 10초가 지난 메세지들은 무시, webhook에 딜레이가 생길 경우 대화 단계가 꼬일 수 있다.
-        if (round(time.time())-message.get('date')) > 10:
-            print('ignore msg,time=', message.get('text'),(round(time.time())-message.get('date')))
+        if (round(time.time()) - message.get('date')) > 10:
+            print('ignore msg,time=', message.get('text'), (round(time.time()) - message.get('date')))
             return JsonResponse({})
 
         # 채팅내용이 없는 경우
@@ -109,16 +109,17 @@ def tel(request):
                 #     msg = '버스 번호를 입력하세요 f'sudo useradd -d /home/ubuntu -u 1000 88-1'
                 #     requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
                 #     reg_order[chat_id] = 1  # 등록 1단계 버스 번호 입력 받기
-            
-        elif reg_order.get(chat_id) == 1 and save_input.get(chat_id) != user_msg.get(chat_id):  # 버스 번호 입력 받은 후 버스 리스트 출력
+
+        elif reg_order.get(chat_id) == 1 and save_input.get(chat_id) != user_msg.get(
+                chat_id):  # 버스 번호 입력 받은 후 버스 리스트 출력
             # bus_number = re.findall('\d+-?\d+', input_text)[0]
-            
+
             # 정규식 활용 버스 번호 추출  xxx-x, xxx 형태
             # bus_number[chat_id] = re.findall(r'\d+-?\d+', user_msg.get(chat_id))  # 메세지에서 숫자 또는 정수-정수 추출
             # if not bus_number[chat_id]:
             #     bus_number[chat_id] = re.findall('\d+', user_msg.get(chat_id))  # 한 자리 정수 추출, 위의 d+형태는 두 자리 이상 정수만 추출되어 보완
             # 기존 정수 추출 정규식에서 모든 문자 추출로 변경, 예시) 강남, 강남1-1과 같은버스가 존재하므로
-            bus_number[chat_id] = re.findall(r'\S+',user_msg.get(chat_id)[2:])
+            bus_number[chat_id] = re.findall(r'\S+', user_msg.get(chat_id)[2:])
 
             # 메세지가 2글자 이하인 경우 지역 또는 버스번호 입력 안한 것으로 판단
             if len(user_msg.get(chat_id)) < 2:
@@ -148,11 +149,11 @@ def tel(request):
                     region[chat_id] = 'gyeonggi'
                 else:
                     region[chat_id] = 'seoul'
-                bus_number[chat_id] = bus_number[chat_id][0]    # 버스번호추출 하는 과정에서 할 경우 버스번호가 없을 때 인덱스에러가 발생할 수 있다.
-                print('지역=',region.get(chat_id),'버스넘버:', bus_number.get(chat_id))
+                bus_number[chat_id] = bus_number[chat_id][0]  # 버스번호추출 하는 과정에서 할 경우 버스번호가 없을 때 인덱스에러가 발생할 수 있다.
+                print('지역=', region.get(chat_id), '버스넘버:', bus_number.get(chat_id))
                 if region.get(chat_id) == 'gyeonggi':
                     url = f'http://openapi.gbis.go.kr/ws/rest/busrouteservice?serviceKey={bus_key}&keyword={bus_number.get(chat_id)}'
-                else: # region.get(chat_id) == 'seoul'
+                else:  # region.get(chat_id) == 'seoul'
                     url = f'http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList?serviceKey={bus_key}&strSrch={bus_number.get(chat_id)}'
                 url_result = requests.get(url).text
                 soup = BS(url_result, 'html.parser')
@@ -163,22 +164,22 @@ def tel(request):
                           '지역(서울, 경기)과 버스 번호를 입력하세요 \n' \
                           '예시) 경기 88-1, 서울 420'
                     send_msg(chat_id, msg)
-                    
+
                 else:
                     msg = '버스를 선택하세요. 예시) 1, 1번'
                     # requests.get(api_url + f'/sendMessage?chat_id={chat_id}&text={msg}')
                     routeid_list[chat_id] = []
                     bus_numbers[chat_id] = []
                     if region.get(chat_id) == 'gyeonggi':
-                        if len(bus_number.get(chat_id)) < 2:    # 버스 번호가 한자리인 경우 완전히 일치하는 버스만 출력, 한자리가 포함된 버스가 수백건이라서..
-                            idx = 0 # 조건에 맞는 버스 출력이므로 enumerate 사용 시 index가 순차적으로 출력되지 않는다.
+                        if len(bus_number.get(chat_id)) < 2:  # 버스 번호가 한자리인 경우 완전히 일치하는 버스만 출력, 한자리가 포함된 버스가 수백건이라서..
+                            idx = 0  # 조건에 맞는 버스 출력이므로 enumerate 사용 시 index가 순차적으로 출력되지 않는다.
                             for bus in bus_list.get(chat_id):
                                 if bus.find("routename").contents[0] == bus_number.get(chat_id):
                                     msg += f'\n{idx + 1}. 버스 : {bus.find("routename").contents[0]} / 지역: {bus.find("regionname").contents[0]}'
                                     routeid_list[chat_id].append(bus.find('routeid').contents[0])
                                     bus_numbers[chat_id].append(bus.find("routename").contents[0])
                                     idx += 1
-                        else: # 버스 번호가 두자리 이상인 경우 해당 번호가 포함되는 모든 버스 출력
+                        else:  # 버스 번호가 두자리 이상인 경우 해당 번호가 포함되는 모든 버스 출력
                             for idx, bus in enumerate(bus_list.get(chat_id)):
                                 msg += f'\n{idx + 1}. 버스 : {bus.find("routename").contents[0]} / 지역: {bus.find("regionname").contents[0]}'
                                 routeid_list[chat_id].append(bus.find('routeid').contents[0])
@@ -237,7 +238,7 @@ def tel(request):
             url_result = requests.get(url).text
             soup = BS(url_result, 'html.parser')
 
-            stations = soup.find('msgbody') ##
+            stations = soup.find('msgbody')  ##
             station_list[chat_id] = list(stations)
 
             index = 0
@@ -249,7 +250,8 @@ def tel(request):
                             station_include[chat_id].append([])
                             station_include[chat_id][index].append(station.find('stationid').contents[0])
                             station_include[chat_id][index].append(station.find('stationname').contents[0])
-                            station_include[chat_id][index].append(station_list.get(chat_id)[idx + 1].find('stationname').contents[0])
+                            station_include[chat_id][index].append(
+                                station_list.get(chat_id)[idx + 1].find('stationname').contents[0])
                             station_include[chat_id][index].append(station.find('stationseq').contents[0])
                             index += 1
             else:  # region.get(chat_id) == 'seoul':
@@ -324,11 +326,11 @@ def tel(request):
                         msg = '퇴근버스 '
 
                     msg += '등록이 완료 되었습니다.\n' \
-                            '-----------------------------------------------\n'\
-                            '알림 예시 : 출근 버스 10분전 알림\n' \
-                            '                 퇴근버스 10분전에 알려줘\n' \
-                            '                 퇴근버스 3분마다 알려줘\n' \
-                            '  **위의 예시와 유사하게 입력하세요**  '
+                           '-----------------------------------------------\n' \
+                           '알림 예시 : 출근 버스 10분전 알림\n' \
+                           '                 퇴근버스 10분전에 알려줘\n' \
+                           '                 퇴근버스 3분마다 알려줘\n' \
+                           '  **위의 예시와 유사하게 입력하세요**  '
                     send_msg(chat_id, msg)
 
                     if reg_order.get(chat_id):
@@ -357,50 +359,54 @@ def tel(request):
                         del go_or_out[chat_id]
                     print('delete bus info')
 
-        elif user_msg.get(chat_id)[:2] == '출근' and user_msg.get(chat_id)[-2:] != '등록' and re.findall('\d+', user_msg.get(chat_id)):
-                minute = re.findall('\d+', user_msg.get(chat_id))
-                if '전' in user_msg.get(chat_id):
-                    busgo = BusGo.objects.filter(chat_id=chat_id).last()
-                    if not busgo:
-                        msg = '먼저 출근 버스를 등록하세요.\n' \
-                            '예시) 출근 버스 등록'
-                        send_msg(chat_id, msg)
-                    else:
-                        # 계정 추가 시 pip로 library 설치한 계정과 같은 uid를 가져야한다.
-                        # OS마다 다르다.. ubuntu의 ubuntu는 1000, amazon linux의 ec2-user는 500
-                        user = f'sudo useradd -d /home/ubuntu -u 1000 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
-                        # 크론탭 시간 1분은 좀 긴거 같고 30초 간격으로 수정해야할듯..
-                        cron = f'(crontab -l 2>/dev/null; echo "*/1 * * * * python3 /home/ubuntu/telegram_alarm/telegram-django/bus_alarm.py {chat_id} {minute[0]} go") | sudo crontab -u {chat_id} -'
-                        os.system(user)
-                        os.system(cron)
-                        msg = f'{busgo.go_bus_number}번 버스 도착 {minute[0]}분 전 알림\n'\
-                            f'종료, 정지 등을 입력하면 종료합니다.'
-                        send_msg(chat_id,msg)
-                    print('end')
-                elif '마다' in user_msg.get(chat_id):
-                    busgo = BusGo.objects.filter(chat_id=chat_id).last()
-                    if not busgo:
-                        msg = '먼저 출근 버스를 등록하세요.\n' \
-                              '예시) 출근 버스 등록'
-                        send_msg(chat_id, msg)
-                    else:
-                        user = f'sudo useradd -d /home/ubuntu -u 1000 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
-                        # 크론탭 시간 1분은 좀 긴거 같고 30초 간격으로 수정해야할듯..
-                        cron = f'(crontab -l 2>/dev/null; echo "*/{minute[0]} * * * * python3 /home/ubuntu/telegram_alarm/telegram-django/bus_alarm.py {chat_id} 300 go") | sudo crontab -u {chat_id} -'
-                        os.system(user)
-                        os.system(cron)
-                        msg = f'{busgo.go_bus_number}번 버스 도착 {minute[0]}분 마다 알림\n' \
-                            f'종료, 정지 등을 입력하면 종료합니다.'
-                        send_msg(chat_id, msg)
-                    print('end')
-                    
-        elif user_msg.get(chat_id)[:2] == '퇴근' and user_msg.get(chat_id)[-2:] != '등록' and re.findall('\d+', user_msg.get(chat_id)):
+        elif user_msg.get(chat_id)[:2] == '출근' and user_msg.get(chat_id)[-2:] != '등록' and re.findall('\d+',
+                                                                                                     user_msg.get(
+                                                                                                             chat_id)):
+            minute = re.findall('\d+', user_msg.get(chat_id))
+            if '전' in user_msg.get(chat_id):
+                busgo = BusGo.objects.filter(chat_id=chat_id).last()
+                if not busgo:
+                    msg = '먼저 출근 버스를 등록하세요.\n' \
+                          '예시) 출근 버스 등록'
+                    send_msg(chat_id, msg)
+                else:
+                    # 계정 추가 시 pip로 library 설치한 계정과 같은 uid를 가져야한다.
+                    # OS마다 다르다.. ubuntu의 ubuntu는 1000, amazon linux의 ec2-user는 500
+                    user = f'sudo useradd -d /home/ubuntu -u 1000 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
+                    # 크론탭 시간 1분은 좀 긴거 같고 30초 간격으로 수정해야할듯..
+                    cron = f'(crontab -l 2>/dev/null; echo "*/1 * * * * python3 /home/ubuntu/telegram_alarm/telegram-django/bus_alarm.py {chat_id} {minute[0]} go") | sudo crontab -u {chat_id} -'
+                    os.system(user)
+                    os.system(cron)
+                    msg = f'{busgo.go_bus_number}번 버스 도착 {minute[0]}분 전 알림\n' \
+                          f'종료, 정지 등을 입력하면 종료합니다.'
+                    send_msg(chat_id, msg)
+                print('end')
+            elif '마다' in user_msg.get(chat_id):
+                busgo = BusGo.objects.filter(chat_id=chat_id).last()
+                if not busgo:
+                    msg = '먼저 출근 버스를 등록하세요.\n' \
+                          '예시) 출근 버스 등록'
+                    send_msg(chat_id, msg)
+                else:
+                    user = f'sudo useradd -d /home/ubuntu -u 1000 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
+                    # 크론탭 시간 1분은 좀 긴거 같고 30초 간격으로 수정해야할듯..
+                    cron = f'(crontab -l 2>/dev/null; echo "*/{minute[0]} * * * * python3 /home/ubuntu/telegram_alarm/telegram-django/bus_alarm.py {chat_id} 300 go") | sudo crontab -u {chat_id} -'
+                    os.system(user)
+                    os.system(cron)
+                    msg = f'{busgo.go_bus_number}번 버스 도착 {minute[0]}분 마다 알림\n' \
+                          f'종료, 정지 등을 입력하면 종료합니다.'
+                    send_msg(chat_id, msg)
+                print('end')
+
+        elif user_msg.get(chat_id)[:2] == '퇴근' and user_msg.get(chat_id)[-2:] != '등록' and re.findall('\d+',
+                                                                                                     user_msg.get(
+                                                                                                             chat_id)):
             minute = re.findall('\d+', user_msg.get(chat_id))
             if '전' in user_msg.get(chat_id):
                 busout = BusOut.objects.filter(chat_id=chat_id).last()
                 if not busout:
                     msg = '먼저 퇴근 버스를 등록하세요.\n' \
-                        '예시) 퇴근 버스 등록'
+                          '예시) 퇴근 버스 등록'
                     send_msg(chat_id, msg)
                 else:
                     user = f'sudo useradd -d /home/ubuntu -u 1000 -o {chat_id}'  # ubuntu 와 같은 uid 를 갖도록 계정 생성
@@ -409,8 +415,8 @@ def tel(request):
                     print(cron)
                     os.system(user)
                     os.system(cron)
-                    msg = f'{busout.out_bus_number}번 버스 도착 {minute[0]}분 전 알림\n'\
-                        f'종료, 정지 등을 입력하면 종료합니다.'
+                    msg = f'{busout.out_bus_number}번 버스 도착 {minute[0]}분 전 알림\n' \
+                          f'종료, 정지 등을 입력하면 종료합니다.'
                     send_msg(chat_id, msg)
                     print('end')
             elif '마다' in user_msg.get(chat_id):
@@ -425,11 +431,11 @@ def tel(request):
                     os.system(user)
                     os.system(cron)
                     msg = f'{busout.out_bus_number}번 버스 도착 {minute[0]}분 마다 알림\n' \
-                        f'종료, 정지 등을 입력하면 종료합니다.'
+                          f'종료, 정지 등을 입력하면 종료합니다.'
                     send_msg(chat_id, msg)
                 print('end')
 
-        elif user_msg.get(chat_id) in ['/start', '안녕', '메뉴', '하이','?']:
+        elif user_msg.get(chat_id) in ['/start', '안녕', '메뉴', '하이', '?', '등록', 'help']:
             msg = '버스도착알림 서비스입니다 :D\n' \
                   '등록, 알림을 위해 아래와 같이 입력하세요.\n' \
                   '(등록 방법) "출근 버스 등록"\n' \

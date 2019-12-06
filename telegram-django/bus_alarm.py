@@ -71,7 +71,7 @@ if station_id is not None:
             location2 = soup.find('locationno2').contents[0]
             seat2 = soup.find('remainseatcnt2').contents[0]
 
-            msg += f'직전 버스: {predict1}분 ({location1}정류장) [{seat1}좌석]\n' \
+            msg = f'직전 버스: {predict1}분 ({location1}정류장) [{seat1}좌석]\n' \
                    f'다음 버스: {predict2}분 ({location2}정류장) [{seat2}좌석]\n' \
                    f'알림 정지: "정지", "종료" 입력'
 
@@ -85,9 +85,10 @@ if station_id is not None:
         url = f'http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRoute?serviceKey={bus_key}&stId={station_id}&busRouteId={route_id}&ord={station_order}'
         request = requests.get(url).text
         soup = BS(request, 'html.parser')
-
         bus1 = soup.find('arrmsg1').contents[0]
         bus2 = soup.find('arrmsg2').contents[0]
+        msg = ''
+
         if bus1.find('분') != -1:
             bus1_minute = bus1[:bus1.find('분')]
             bus1_location = bus1[bus1.find('[') + 1:bus1.find('번')]
